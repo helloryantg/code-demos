@@ -1,7 +1,9 @@
-import { syncRecords } from './sync-records.js'
+import { syncRecords } from './sync-records'
 
-await syncRecords({
-  env: 'int',
-  uuids: [],
-  batchCount: 50,
-})
+;(async() => { 
+  await syncRecords({
+    env: 'int',
+    uuids: ['123'],
+    batchCount: 50,
+  })
+})()

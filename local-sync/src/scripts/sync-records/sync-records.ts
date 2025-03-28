@@ -4,10 +4,10 @@ dotenv.config()
 
 import { Knex } from 'knex'
 
-import { getDb } from './get-db.js'
-import { chunk } from '../../utils/chunk.js'
-import { buildMultiLookup } from '../../utils/build-multi-lookup.js'
-import { buildLookup } from '../../utils/build-lookup.js'
+import { getDb } from './get-db'
+import { chunk } from '../../utils/chunk'
+import { buildMultiLookup } from '../../utils/build-multi-lookup'
+import { buildLookup } from '../../utils/build-lookup'
 
 const { APP_ENV } = process.env
 
