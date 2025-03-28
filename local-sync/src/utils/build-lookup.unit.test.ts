@@ -1,7 +1,7 @@
 import { buildLookup } from './build-lookup'
 
 describe('buildLookup', () => {
-  test('should build a lookup object from an array of elements', () => {
+  test('should build a lookup object from an array of elements with a single value', () => {
     const assetOne = { id: 1, uuid: '111' }
     const assetTwo = { id: 2, uuid: '222' }
     const assetThree = { id: 3, uuid: '333' }
