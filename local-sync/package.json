@@ -1,0 +1,21 @@
+{
+  "name": "local-sync",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build": "rm -rf dist && tsc",
+    "sync-records": "npm run build && node dist/src/scripts/sync-records"
+  },
+  "keywords": [],
+  "author": "Ryan Gonzales",
+  "license": "ISC",
+  "type": "module",
+  "description": "This package is a basic example of how to sync records from remote databases to a local database",
+  "devDependencies": {
+    "typescript": "^5.8.2"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "knex": "^3.1.0"
+  }
+}
