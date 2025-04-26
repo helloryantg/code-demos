@@ -75,25 +75,25 @@ export async function syncRecords({ env, uuids, batchCount }: SyncRecordParams) 
 }
 
 async function processBatch({ remoteEnvDb, localDb, uuidsBatch, assets }: { remoteEnvDb: Knex, localDb: Knex, uuidsBatch: string[], assets: Asset[] }) {
-  const { assetIds, assetUuids, uniqueGpmsIds } = getIdsFromAssets(assets)
+  const { assetIds, assetUuids, uniqueTitleIds } = getIdsFromAssets(assets)
 
   /**
    * Fetch related source asset and title records from individual tables
    * Relationships:
    * - assets.id -> source_assets.asset_id (one-to-many - i.e. a single asset can have many source assets)
-   * - titles.gpms_id -> assets.data.title.gpms_id (one-to-many - i.e. a single title can have many assets)
+   * - titles.title_id -> assets.data.title.title_id (one-to-many - i.e. a single title can have many assets)
    */
   const [sourceAssets, titles] = await Promise.all([
     remoteEnvDb<SourceAsset>('source_assets').whereIn('asset_id', assetIds),
-    remoteEnvDb<Title>('titles').whereIn('gpms_id', uniqueGpmsIds)
+    remoteEnvDb<Title>('titles').whereIn('title_id', uniqueTitleIds)
   ])
 
   // Fetch existing asset and title records from the local database
   const [localAssets, localTitles] = await Promise.all([
     localDb<Asset>('assets').whereIn('uuid', assetIds),
     localDb<Title>('titles')
-      .whereIn('gpms_id', uniqueGpmsIds)
-      .returning(['gpms_id'])
+      .whereIn('title_id', uniqueTitleIds)
+      .returning(['title_id'])
   ])
 
   // Fetch existing source asset records from the local database
@@ -133,12 +133,12 @@ async function processBatch({ remoteEnvDb, localDb, uuidsBatch, assets }: { remo
     })
   } 
   
-  const titlesByGpmsId = buildLookup(titles, (title) => title.gpms_id)
-  const localTitlesByGpmsId = buildLookup(localTitles, (title) => title.gpms_id)
+  const titlesByTitleId = buildLookup(titles, (title) => title.title_id)
+  const localTitlesByTitleId = buildLookup(localTitles, (title) => title.title_id)
 
   // Upsert title records
   for (const title of titles) {
-    const existingLocalTitle = localTitlesByGpmsId[title.gpms_id]
+    const existingLocalTitle = localTitlesByTitleId[title.title_id]
 
     await upsertTitle({ title, existingLocalTitle, localDb })
   }
@@ -150,7 +150,7 @@ async function processBatch({ remoteEnvDb, localDb, uuidsBatch, assets }: { remo
     console.error('Missing assets', { missingAssets })
   }
 
-  const missingTitles = uniqueGpmsIds.filter(gpmsId => !titlesByGpmsId[gpmsId])
+  const missingTitles = uniqueTitleIds.filter(titleId => !titlesByTitleId[titleId])
 
   if (missingTitles.length) {
     console.error('Missing titles', { missingTitles })
@@ -160,7 +160,7 @@ async function processBatch({ remoteEnvDb, localDb, uuidsBatch, assets }: { remo
 function getIdsFromAssets (assets: Asset[]) {
   const assetIds: number[] = []
   const assetUuids: string[] = []
-  const gpmsIds = new Set<string>()
+  const titleIds = new Set<string>()
 
   for (const asset of assets) {
     const { id, uuid, data } = asset
@@ -168,17 +168,17 @@ function getIdsFromAssets (assets: Asset[]) {
     assetIds.push(id)
     assetUuids.push(uuid)
 
-    if (data?.title?.gpms_id) {
-      gpmsIds.add(data.title.gpms_id)
+    if (data?.title?.title_id) {
+      titleIds.add(data.title.title_id)
     }
   }      
 
-  const uniqueGpmsIds = Array.from(gpmsIds)
+  const uniqueTitleIds = Array.from(titleIds)
 
   return {
     assetIds,
     assetUuids,
-    uniqueGpmsIds,
+    uniqueTitleIds,
   }
 }
 
@@ -246,15 +246,15 @@ async function upsertSourceAsset({
   }
 }
 
-async function upsertTitle({ existingLocalTitle, title, localDb }: { existingLocalTitle: Pick<Title, 'gpms_id'>, title: Title, localDb: Knex }) {
+async function upsertTitle({ existingLocalTitle, title, localDb }: { existingLocalTitle: Pick<Title, 'title_id'>, title: Title, localDb: Knex }) {
   if (existingLocalTitle) {
-    const { id, gpms_id, ...rest } = title
+    const { id, title_id, ...rest } = title
 
     await localDb<Title>('titles')
       .update({
-        ...rest, // Update all fields except 'id' and 'gpms_id'
+        ...rest, // Update all fields except 'id' and 'title_id'
       })
-      .where('gpms_id', existingLocalTitle.gpms_id)
+      .where('title_id', existingLocalTitle.title_id)
   } else {
     const { id, ...rest } = title
 

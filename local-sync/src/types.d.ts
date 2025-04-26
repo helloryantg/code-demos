@@ -10,7 +10,7 @@ type TableDefaults = {
 
 type AssetData = {
   title?: {
-    gpms_id?: Title['gpms_id']
+    title_id?: Title['title_id']
   }
 }
 
@@ -34,6 +34,6 @@ type SourceAsset = TableDefaults & {
 
 type Title = TableDefaults & {
   data: Record<string, any> | null
-  gpms_id: string
+  title_id: string
   name: string
 }
